@@ -12,10 +12,13 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 The goal of this PoC is to demonstrate usability of data of Warsaw trams
 for the purpose of predicting delays.
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+Source data collected from: <https://api.um.warszawa.pl>
 
-``` r
+<!--
+What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
+
+
+```r
 summary(cars)
 #>      speed           dist       
 #>  Min.   : 4.0   Min.   :  2.00  
@@ -26,8 +29,5 @@ summary(cars)
 #>  Max.   :25.0   Max.   :120.00
 ```
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this. You could also
-use GitHub Actions to re-render `README.Rmd` every time you push. An
-example workflow can be found here:
-<https://github.com/r-lib/actions/tree/v1/examples>.
+You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this. You could also use GitHub Actions to re-render `README.Rmd` every time you push. An example workflow can be found here: <https://github.com/r-lib/actions/tree/v1/examples>.
+-->
