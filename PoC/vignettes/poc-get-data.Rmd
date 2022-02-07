@@ -1,0 +1,58 @@
+---
+title: "Getting the data on small scale"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting the data on small scale}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r echo=TRUE, warning=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+print(.libPaths())
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+## Trams
+Data was taken from API, with calls every 60 seconds (refresh rate of API), over 3 hours. Data limited to line 7. Data access date 07-02-2022
+
+```r
+collect_trams_from_api(
+  line_number = 7, 
+  time_interval = 60, 
+  max_calls = 181, 
+  output = "../data-raw/tram-7-3h.tsv"
+  )
+```
+
+### Pre-process data
+
+```{r echo=TRUE}
+trams <- read_delim(
+  file = "../data-raw/tram-7-3h.tsv",
+  skip = 1, 
+  col_names = FALSE,
+  show_col_types = FALSE)
+
+# remove row indexes
+trams <- trams[2:ncol(trams)]
+
+colnames(trams) <- c("Lines", "Lon", "VehicleNumber", "Time", "Lat", "Brigade", "get_timestamp")
+
+head(trams)
+
+```
+
+### Visualise data
+```{r plot line 7}
+trams |>
+  ggplot(aes(x = Lon, y=Lat)) +
+  geom_point(alpha=.1, show.legend = FALSE)
+
+```
+

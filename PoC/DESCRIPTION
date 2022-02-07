@@ -13,4 +13,11 @@ RoxygenNote: 7.1.2
 Imports:
   dplyr,
   httr,
-  purrr
+  purrr,
+  readr,
+  usethis
+Suggests: 
+    rmarkdown,
+    knitr,
+    ggplot2
+VignetteBuilder: knitr

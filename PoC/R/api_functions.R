@@ -1,32 +1,36 @@
-#' Make single api call for trams geolocalisation
+#' Make single api call for ?trams geolocalisation
 #'
+#' @param line_number tram line number to call, default NULL will call all trams
+#' @param time_interval time between API calls in seconds
+#' @param max_calls maximum number of calls to make
+#' @param output output file path and name
 #' @param api_key personal key to API
-#' @param tram_number number of a tram to track; default NULL call for all trams
 #'
 #' @return single call transforms JSON to tibble and saves to .tsv file
 #'
 #' @importFrom purrr map_df
 #' @importFrom dplyr mutate
 #' @importFrom httr GET content
+#' @importFrom usethis ui_info
 #' @export
 
-collect_trams_from_api <- function(api_key=NULL,
-                                   line_number = NULL,
+collect_trams_from_api <- function(line_number = NULL,
                                    time_interval = 60L,
                                    max_calls = NULL,
-                                   output = "./data-raw/api_tram_out.tsv") {
+                                   output = "./data-raw/api_tram_out.tsv",
+                                   api_key = Sys.getenv("UM_WAW_PERSONAL_API_KEY")) {
   N <- 0
   if (is.null(max_calls)) {
-    usethis::ui_info("max_calls not provided, API will make calls until interuption")
+    ui_info("max_calls not provided, API will make calls until interuption")
     condition <- TRUE
   } else {
-    usethis::ui_info(paste("API will make", max_calls, "calls"))
+    ui_info(paste("API will make", max_calls, "calls"))
     condition <- N < max_calls
   }
 
   url_base <- paste(
     "https://api.um.warszawa.pl/api/action/busestrams_get/?resource_id=%20f2e5503e-927d-4ad3-9500-4ab9e55deb59",
-    "&apikey=", Sys.getenv("UM_WAW_PERSONAL_API_KEY"),
+    "&apikey=", api_key,
     "&type=2" # 2 for trams, 1 for buses
   )
 
