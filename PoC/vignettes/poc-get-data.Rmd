@@ -7,14 +7,15 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r echo=TRUE, warning=FALSE}
+```{r warning=FALSE, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-print(.libPaths())
+library(httr)
 library(readr)
 library(dplyr)
+library(purrr)
 library(ggplot2)
 ```
 
@@ -29,9 +30,65 @@ collect_trams_from_api(
   output = "../data-raw/tram-7-3h.tsv"
   )
 ```
+## Get bus & tram stops
 
-### Pre-process data
+Next step is to identify where the stops are. After api call we receive ugly nested list that I stored in JSON format.
+```{r, get-stops-data-from-api}
+url <- paste0(
+  "https://api.um.warszawa.pl/api/action/dbstore_get?id=1c08a38c-ae09-46d2-8926-4f9d25cb0630",
+  "&apikey=", Sys.getenv("UM_WAW_PERSONAL_API_KEY")
+  )
 
+przystanki <- GET(url)
+
+przystanki <- content(przystanki)
+
+# jsonlite::write_json(przystanki, "przystanki.json", pretty = TRUE)
+```
+That looks like this:
+```json
+{
+  "result": [
+    {
+      "values": [
+        {
+          "value": ["1001"],
+          "key": ["zespol"]
+        },
+        {
+          "value": ["01"],
+          "key": ["slupek"]
+        },
+        {
+          "value": ["Kijowska"],
+          "key": ["nazwa_zespolu"]
+        },
+        {
+          "value": ["2201"],
+          "key": ["id_ulicy"]
+        },
+        {
+          "value": ["52.248455"],
+          "key": ["szer_geo"]
+        },
+        {
+          "value": ["21.044827"],
+          "key": ["dlug_geo"]
+        },
+        {
+          "value": ["al.Zieleniecka"],
+          "key": ["kierunek"]
+        },
+        {
+          "value": ["2021-10-08 00:00:00.0"],
+          "key": ["obowiazuje_od"]
+        }
+      ]
+    },
+...
+```
+
+### CLEAN TRAMS GPS DATA
 ```{r echo=TRUE}
 trams <- read_delim(
   file = "../data-raw/tram-7-3h.tsv",
@@ -42,17 +99,48 @@ trams <- read_delim(
 # remove row indexes
 trams <- trams[2:ncol(trams)]
 
-colnames(trams) <- c("Lines", "Lon", "VehicleNumber", "Time", "Lat", "Brigade", "get_timestamp")
+colnames(trams) <- c("line", "lon", "vehicle_number", "time", "lat", "brigade", "get_timestamp")
 
 head(trams)
+```
+
+### CLEAN STOPS DATA
+```{r}
+przystanki <- jsonlite::read_json("przystanki.json")
+key_names <- c("zespol", "slupek", "nazwa_zespolu", "id_ulicy", "szer_geo", "dlug_geo", "kierunek", "obowiazuje_od")
+# get values for keys
+przystanki_flat <- przystanki |> purrr::flatten() |> purrr::flatten()
+przystanki_clean_list <- przystanki_flat |> 
+  map(~map(.x, ~pluck(.x$value))) |>
+  modify_depth(.depth = 1, ~ set_names(.x,nm = key_names))
+
+# convert list to data.frame
+przystanki_df <- przystanki_clean_list |> map_df(~unlist(.x))
+
+english_keys <- c("team", "pole", "team_name", "street_id", "lat", "lon", "direction", "valid_from")
+names(przystanki_df) <- english_keys
+
+przystanki_df <- przystanki_df |> 
+  mutate(
+    lat = as.numeric(lat),
+    lon = as.numeric(lon),
+    valid_from = as.POSIXct(valid_from)
+  )
+przystanki_df |> head()
 
 ```
 
 ### Visualise data
 ```{r plot line 7}
 trams |>
-  ggplot(aes(x = Lon, y=Lat)) +
-  geom_point(alpha=.1, show.legend = FALSE)
+  ggplot(aes(x = lon, y = lat)) +
+  geom_point(alpha = .1, show.legend = FALSE)
 
 ```
 
+### Plot stops
+```{r}
+przystanki_df |>
+  ggplot(aes(x = lon, y = lat)) +
+  geom_point(alpha = .1, show.legend = FALSE)
+```
