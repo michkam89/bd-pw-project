@@ -15,25 +15,49 @@ knitr::opts_chunk$set(
 library(httr)
 library(readr)
 library(dplyr)
+library(tidyr)
 library(purrr)
+library(usethis)
 library(ggplot2)
+
+devtools::load_all()
 ```
 
-## Trams
+# EXTRACT DATA
+
+## Trams GPS coordinates
 Data was taken from API, with calls every 60 seconds (refresh rate of API), over 3 hours. Data limited to line 7. Data access date 07-02-2022
 
 ```r
-collect_trams_from_api(
+get_trams_gps(
   line_number = 7, 
   time_interval = 60, 
   max_calls = 181, 
   output = "../data-raw/tram-7-3h.tsv"
   )
 ```
-## Get bus & tram stops
+
+### CLEAN TRAMS GPS DATA
+```{r echo=TRUE}
+trams <- read_delim(
+  file = "../data-raw/tram-7-xxx-int15s.tsv",
+  skip = 1, 
+  col_names = FALSE,
+  show_col_types = FALSE)
+
+# remove row indexes
+trams <- trams[2:ncol(trams)]
+
+colnames(trams) <- c("line", "lon_tram", "vehicle_number", "time", "lat_tram", "brigade", "get_timestamp")
+
+head(trams)
+```
+
+
+## Tram and bus stops coordinates
 
 Next step is to identify where the stops are. After api call we receive ugly nested list that I stored in JSON format.
-```{r, get-stops-data-from-api}
+```{r eval=FALSE, include=FALSE}
 url <- paste0(
   "https://api.um.warszawa.pl/api/action/dbstore_get?id=1c08a38c-ae09-46d2-8926-4f9d25cb0630",
   "&apikey=", Sys.getenv("UM_WAW_PERSONAL_API_KEY")
@@ -45,6 +69,7 @@ przystanki <- content(przystanki)
 
 # jsonlite::write_json(przystanki, "przystanki.json", pretty = TRUE)
 ```
+
 That looks like this:
 ```json
 {
@@ -88,53 +113,309 @@ That looks like this:
 ...
 ```
 
-### CLEAN TRAMS GPS DATA
-```{r echo=TRUE}
-trams <- read_delim(
-  file = "../data-raw/tram-7-3h.tsv",
-  skip = 1, 
-  col_names = FALSE,
-  show_col_types = FALSE)
+### CLEAN STOPS DATA
 
-# remove row indexes
-trams <- trams[2:ncol(trams)]
+After the clean-up of data into the tabular format
+```{r}
+przystanki_df <- get_all_stops_gps()
+przystanki_df |> head()
+```
 
-colnames(trams) <- c("line", "lon", "vehicle_number", "time", "lat", "brigade", "get_timestamp")
 
+
+
+
+## GET TIMETABLES
+
+In order to get timetables, we need to know which tram/bus stops at which stop to generate the correct API call.
+
+#### DO NOT RE-RUN THIS CELL UNLESS YOU WANT TO UPDATE DATA
+```{r eval=FALSE, include=FALSE}
+
+unique_stop_instances <- przystanki_df |> 
+  select(team, pole) |> 
+  distinct()
+
+busstops_lines <- get_all_lines_at_stop(unique_stop_instances)
+
+# last save 25-03-2022
+write_rds(busstops_lines, "bustops_lines.rds", compress = "xz")
+```
+
+Get only stops where line 7 stops
+```{r}
+busstops_lines <- read_rds("bustops_lines.rds")
+busstops_lines <- select(busstops_lines, team, pole, data)
+
+
+stops_7 <- busstops_lines |> 
+  #filter(team == "1001", pole == "01") |> 
+  mutate(lines = map(data, ~ .x$value)) |> 
+  unnest_longer(lines, values_to = "line") |> 
+  filter(line == "7") |> 
+  select(-data)
+head(stops_7)
+```
+Keep stops details only for line 7
+```{r}
+stops_details_7 <- semi_join(przystanki_df, stops_7, by = c("team", "pole"))
+stops_details_7 <- stops_details_7 |> 
+  rename(lon_stop = lon,
+         lat_stop  = lat)
+head(stops_details_7)
+```
+Now we can get timetables for all stops of line 7
+```{r get timetables}
+line <- 7
+
+unique_stop_instances_7 <- stops_details_7 |>  
+  select(team, pole) |> 
+  distinct()
+
+timetables_7 <- get_timetables(unique_stop_instances_7, line)
+
+readr::write_csv(timetables_7, "timetables_7_sunday_10-04-2022.csv")
+```
+
+
+Identify pętle i zajezdnie
+```{r}
+
+stops_details_7 |> pull(direction) |> unique() |> sort()
+
+# zajezdnie ZET
+
+# pętle dla 7 manualnie "P+R Al.Krakowska" i "Kawęczyńska-Bazylika"
+
+```
+
+# VISUALIZE
+```{r}
+# sprawdzenie przystankóœ na pl narutowicza
+stops_details_7 |> 
+  filter(team_name == "pl.Narutowicza") |> 
+  ggplot(aes(x = lon_stop, y = lat_stop)) +
+  geom_point()+
+  geom_text(aes(label = pole))
+
+```
+```{r }
+# sprawdzam czy trasa zawsze zgadza się z założeniami ze następny przystanek można brać z "direction"
+timetables_7 %>% 
+  mutate(filtered = map(timetables_7$timetable, ~ filter(., trasa == "TZ-KAW3"))) %>%
+  unnest(cols = filtered) |>
+  mutate(czas = lubridate::hms(czas)) |> 
+  arrange(czas) |> 
+  select(team, pole, kierunek, czas) |> 
+  left_join(select(stops_details_7, team, pole, team_name, direction), by = c("team", "pole"))
+```
+
+Wniosek - __NIE__. Trzeba zebrać wszystkie trasy posortować po czasie przyjazdu i ustalić kolejność przystanków na ich zasadzie. Np dla trasy TZ-KAW3 do zajezdni mokotów direction jako następny przystanek nie sprawdza się, gdy tramwaj odbija do zajezdni.
+
+Nie udało się opracować jednego sposobu na określenie kolejności przystanków per trasa bo brakuje zmiennej, która oddzielałaby przejazdy tej samej brygady po tej samej trasie w ciągu dnia. 
+
+Kolejność przystanków określona na podstawie timetable dla rozkładu weenekdowego (czy to ma znaczenie?) 
+```{r wytyczenie kolejności przystankóœ na trasie}
+feats <- c("trasa","czas_rozkladu", "brygada", "team", "pole",  "kierunek")
+
+clean_timetable_7 <- timetables_7 |> 
+  unnest(cols = timetable) |> 
+  filter(!is.na(czas)) |> # remove rows for which api failed to get data
+  mutate(
+    czas_rozkladu = lubridate::hms(czas),
+    brygada = as.numeric(brygada)) |> 
+  select(feats) |> 
+  arrange(trasa, czas_rozkladu, brygada, team, pole) |> 
+  left_join(select(stops_details_7, team, pole, team_name), by = c("team", "pole"))  |> 
+  group_by(trasa, brygada) |> 
+  arrange(trasa, brygada, czas_rozkladu) 
+
+clean_timetable_7 |> pull(trasa) |> unique()
+
+# TD-2OKE - występuje raz z zajezdni praga na okęcie.
+td_2OKE_order <- clean_timetable_7 |> 
+  ungroup() |> 
+  filter(trasa == "TD-2OKE") |> 
+  transmute(
+    trasa = trasa,
+    team = team,
+    pole = pole,
+    team_name,
+    stop_order = row_number())
+
+# TD-3OKE - występuje kilka razy dlatego zlimitowane do brygady
+# z zajezdni mokotów na okęcie
+td_3OKE_order <- clean_timetable_7 |> 
+  ungroup() |> 
+  filter(trasa == "TD-3OKE", brygada ==  1) |> 
+  transmute(
+    trasa = trasa,
+    team = team,
+    pole = pole,
+    team_name,
+    stop_order = row_number())
+
+# TP-KAW - główna trasa okęcie --> kawęczyńska 
+# występuje wiele razy dlatego zlimitowane do brygady i ograniczone czasowo
+# żeby wyłapać jeden przejazd
+
+tp_kaw_order <- clean_timetable_7 |> 
+  ungroup() |> 
+  filter(
+    trasa == "TP-KAW", 
+    brygada == 1, 
+    czas_rozkladu < lubridate::hm("7:00")
+    ) |> 
+  transmute(
+    trasa = trasa,
+    team = team,
+    pole = pole,
+    team_name,
+    stop_order = row_number()
+    )
+
+# TP-OKE - główna trasa kawęczyńska --> okęcie 
+tp_oke_order <- clean_timetable_7 |> 
+  ungroup() |> 
+  filter(
+    trasa == "TP-OKE", 
+    brygada == 1,
+    czas_rozkladu < lubridate::hm("8:00")
+    ) |> 
+  transmute(
+    trasa = trasa,
+    team = team,
+    pole = pole,
+    team_name,
+    stop_order = row_number()
+    )
+
+# TZ-OKE2 - trasa z okęcia do zajezdni ZET-PRAGA - jedna brygada
+tz_oke2_order <- clean_timetable_7 |> 
+  ungroup() |> 
+  filter(
+    trasa == "TZ-OKE2"
+    ) |> 
+  transmute(
+    trasa = trasa,
+    team = team,
+    pole = pole,
+    team_name,
+    stop_order = row_number()
+    )
+
+# TZ-OKE3 - trasa z okęcia do zajezdni ZET-MOKOTÓW - dwie brygady
+tz_oke3_order <- clean_timetable_7 |> 
+  ungroup() |> 
+  filter(
+    trasa == "TZ-OKE3",
+    brygada == 1
+    ) |> 
+  transmute(
+    trasa = trasa,
+    team = team,
+    pole = pole,
+    team_name,
+    stop_order = row_number()
+    )
+
+
+trasy <- bind_rows(
+  td_2OKE_order,
+  td_3OKE_order,
+  tp_kaw_order,
+  tp_oke_order,
+  tz_oke2_order,
+  tz_oke3_order
+)
+
+readr::write_csv(trasy, "trasy.csv")
+
+head(trasy)
+```
+
+```{r}
 head(trams)
 ```
-
-### CLEAN STOPS DATA
 ```{r}
-przystanki <- jsonlite::read_json("przystanki.json")
-key_names <- c("zespol", "slupek", "nazwa_zespolu", "id_ulicy", "szer_geo", "dlug_geo", "kierunek", "obowiazuje_od")
-# get values for keys
-przystanki_flat <- przystanki |> purrr::flatten() |> purrr::flatten()
-przystanki_clean_list <- przystanki_flat |> 
-  map(~map(.x, ~pluck(.x$value))) |>
-  modify_depth(.depth = 1, ~ set_names(.x,nm = key_names))
-
-# convert list to data.frame
-przystanki_df <- przystanki_clean_list |> map_df(~unlist(.x))
-
-english_keys <- c("team", "pole", "team_name", "street_id", "lat", "lon", "direction", "valid_from")
-names(przystanki_df) <- english_keys
-
-przystanki_df <- przystanki_df |> 
+head(clean_timetable_7)
+```
+```{r where is my tram - scratches}
+x <- trams |> 
   mutate(
-    lat = as.numeric(lat),
-    lon = as.numeric(lon),
-    valid_from = as.POSIXct(valid_from)
-  )
-przystanki_df |> head()
+    czas = as.character(time) |> 
+      stringr::str_extract(pattern = "\\d\\d:\\d\\d:\\d\\d$") |> 
+      lubridate::hms()
+  ) |> 
+  #select(get_timestamp) |> 
+  filter(as.character(get_timestamp) == "2022-03-23 20:16:07",
+         brigade == 1) 
+  #left_join(clean_timetable_7, by = c("brigade"="brygada"))
+  #left_join(stops_details_7, by = c("brigade"="brygada"))
+
+
+head(stops_details_7)
+# find closest entry in timetable ==> znaleźć obecną trasę
+obecna_trasa <- x |> 
+  left_join(clean_timetable_7, by = c("brigade"="brygada")) |> 
+  mutate(
+    czas_diff = abs(as.difftime(czas - czas_rozkladu))
+  ) |> 
+  filter(czas_diff == min(czas_diff)) |> 
+  slice_head(n=1) |> 
+  pull(trasa)
+
+przystanki_obecna_trasa <- trasy |> filter(trasa == obecna_trasa)
+stop_det_current <- semi_join(
+  stops_details_7, 
+  przystanki_obecna_trasa,
+  by = c("team", "pole"))
+# find closest stop?
+dist_to_stop <- x |> 
+  left_join(stop_det_current, by = character()) |> 
+  rowwise() |> 
+  mutate(
+    dist_to_stop = geosphere::distHaversine(
+      c(lon_tram, lat_tram), 
+      c(lon_stop, lat_stop)
+      )
+  ) 
+```
+
+
+### Visualise data
+
+```{r trasy, fig.width=10, fig.height=10}
+trasy <- readr::read_csv("trasy.csv")
+trasy |> 
+  left_join(select(stops_details_7, team, pole, lat, lon), by = c("team", "pole")) |> 
+  ggplot(aes(x = lon_stop, y = lat_stop, color = trasa)) + 
+  geom_point(color = "black") +
+  geom_path(show.legend = FALSE)+
+  ggrepel::geom_label_repel(aes(label = team_name), size = 3, show.legend = FALSE)+
+  #geom_text(aes(label = team_name), size = 2)+
+  facet_wrap(~ trasa)
 
 ```
 
-### Visualise data
-```{r plot line 7}
-trams |>
-  ggplot(aes(x = lon, y = lat)) +
-  geom_point(alpha = .1, show.legend = FALSE)
+```{r plot line 7, fig.height=10, fig.width=10}
+tracked_tram <- trams |> 
+  filter(as.character(get_timestamp) == "2022-03-23 20:16:07" & brigade == 1)
+
+ggplot(data = trams, aes(x = lon_tram, y = lat_tram)) +
+  geom_point(alpha = .1, show.legend = FALSE) +
+  geom_point(
+    data = tracked_tram,
+    aes(x = lon_tram, y = lat_tram),
+    color = "red", 
+    size = 3) +
+  geom_point(data = stops_details_7, aes(x = lon_stop, y = lat_stop), color = "orange") +
+  ggrepel::geom_text_repel(
+    data = stops_details_7, 
+    aes(x = lon_stop, y = lat_stop, label = paste(team_name, pole)),
+    size = 3, 
+    max.overlaps = 20) +
+  ggtitle("Trams and tram stops location")
 
 ```
 
@@ -142,5 +423,22 @@ trams |>
 ```{r}
 przystanki_df |>
   ggplot(aes(x = lon, y = lat)) +
-  geom_point(alpha = .1, show.legend = FALSE)
+  geom_point(alpha = .1, show.legend = FALSE)+
+  ggtitle("All bus and tram stops in Warsaw")
 ```
+
+### Distance between two coordinates in straight line in meters
+```{r}
+geosphere::distHaversine(c(21.04766, 52.25201), c(21.04949, 52.25262))
+```
+
+### How to detect if tram is close to / at the stop?
+
+1. Assume that tram stop is a circle of a given radius
+2. If distance to the stop is =< to the radius then assume stop
+
+Problem: what if tram is caught after the stop? 
+Solution: 
+1. distance to the next stop (must know which and where is next stop) is shorter than previously?
+2. di
+

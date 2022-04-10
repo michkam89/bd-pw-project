@@ -1,0 +1,169 @@
+trasa,team,pole,team_name,stop_order
+TD-2OKE,R-02,00,ZET PRAGA,1
+TD-2OKE,1028,01,Dw.Wschodni (Kijowska),2
+TD-2OKE,1001,03,Kijowska,3
+TD-2OKE,2001,07,al.Zieleniecka,4
+TD-2OKE,2131,09,rondo Waszyngtona,5
+TD-2OKE,2131,05,rondo Waszyngtona,6
+TD-2OKE,7003,04,most Poniatowskiego,7
+TD-2OKE,7041,06,Muzeum Narodowe,8
+TD-2OKE,7033,06,Krucza,9
+TD-2OKE,7013,10,Centrum,10
+TD-2OKE,7002,08,Dw.Centralny,11
+TD-2OKE,4052,04,pl.Starynkiewicza,12
+TD-2OKE,4001,06,pl.Zawiszy,13
+TD-2OKE,4002,02,Ochota-Ratusz,14
+TD-2OKE,4003,08,pl.Narutowicza,15
+TD-2OKE,4121,04,Wawelska,16
+TD-2OKE,4004,04,Och-Teatr,17
+TD-2OKE,4005,04,Bitwy Warszawskiej 1920 r.,18
+TD-2OKE,4137,02,Hale Banacha,19
+TD-2OKE,4006,04,Dickensa,20
+TD-2OKE,4007,04,Korotyńskiego,21
+TD-2OKE,4008,04,PKP Rakowiec,22
+TD-2OKE,4010,04,Włochy-Ratusz,23
+TD-2OKE,4011,04,Hynka,24
+TD-2OKE,4012,04,Krakowiaków,25
+TD-2OKE,4013,02,Lipowczana,26
+TD-2OKE,4014,04,Instytut Lotnictwa,27
+TD-3OKE,R-03,00,ZET MOKOTÓW,1
+TD-3OKE,3240,04,Woronicza,2
+TD-3OKE,3239,04,Wołoska,3
+TD-3OKE,3238,04,Wołoska-Szpital,4
+TD-3OKE,3237,04,Kulskiego,5
+TD-3OKE,3286,04,Rakowiecka-Sanktuarium,6
+TD-3OKE,3118,02,Kielecka,7
+TD-3OKE,3228,04,Metro Pole Mokotowskie,8
+TD-3OKE,7094,04,Biblioteka Narodowa,9
+TD-3OKE,7093,04,GUS,10
+TD-3OKE,7090,04,Nowowiejska,11
+TD-3OKE,4153,02,NIK,12
+TD-3OKE,4028,04,Raszyńska,13
+TD-3OKE,4003,08,pl.Narutowicza,14
+TD-3OKE,4121,04,Wawelska,15
+TD-3OKE,4004,04,Och-Teatr,16
+TD-3OKE,4005,04,Bitwy Warszawskiej 1920 r.,17
+TD-3OKE,4137,02,Hale Banacha,18
+TD-3OKE,4006,04,Dickensa,19
+TD-3OKE,4007,04,Korotyńskiego,20
+TD-3OKE,4008,04,PKP Rakowiec,21
+TD-3OKE,4010,04,Włochy-Ratusz,22
+TD-3OKE,4011,04,Hynka,23
+TD-3OKE,4012,04,Krakowiaków,24
+TD-3OKE,4013,02,Lipowczana,25
+TD-3OKE,4014,04,Instytut Lotnictwa,26
+TP-KAW,4015,03,P+R Al.Krakowska,1
+TP-KAW,4015,04,P+R Al.Krakowska,2
+TP-KAW,4014,03,Instytut Lotnictwa,3
+TP-KAW,4013,01,Lipowczana,4
+TP-KAW,4012,03,Krakowiaków,5
+TP-KAW,4011,03,Hynka,6
+TP-KAW,4010,03,Włochy-Ratusz,7
+TP-KAW,4008,03,PKP Rakowiec,8
+TP-KAW,4007,03,Korotyńskiego,9
+TP-KAW,4006,03,Dickensa,10
+TP-KAW,4137,01,Hale Banacha,11
+TP-KAW,4005,03,Bitwy Warszawskiej 1920 r.,12
+TP-KAW,4004,03,Och-Teatr,13
+TP-KAW,4121,03,Wawelska,14
+TP-KAW,4003,07,pl.Narutowicza,15
+TP-KAW,4002,01,Ochota-Ratusz,16
+TP-KAW,4001,05,pl.Zawiszy,17
+TP-KAW,4052,03,pl.Starynkiewicza,18
+TP-KAW,7002,07,Dw.Centralny,19
+TP-KAW,7013,09,Centrum,20
+TP-KAW,7033,05,Krucza,21
+TP-KAW,7041,05,Muzeum Narodowe,22
+TP-KAW,7003,03,most Poniatowskiego,23
+TP-KAW,2131,07,rondo Waszyngtona,24
+TP-KAW,2131,08,rondo Waszyngtona,25
+TP-KAW,2001,05,al.Zieleniecka,26
+TP-KAW,1001,06,Kijowska,27
+TP-KAW,1028,02,Dw.Wschodni (Kijowska),28
+TP-KAW,1029,02,Zajezdnia Praga,29
+TP-KAW,1030,02,Wojnicka,30
+TP-OKE,1031,01,Kawęczyńska-Bazylika,1
+TP-OKE,1031,02,Kawęczyńska-Bazylika,2
+TP-OKE,1030,01,Wojnicka,3
+TP-OKE,1029,01,Zajezdnia Praga,4
+TP-OKE,1028,01,Dw.Wschodni (Kijowska),5
+TP-OKE,1001,03,Kijowska,6
+TP-OKE,2001,07,al.Zieleniecka,7
+TP-OKE,2131,09,rondo Waszyngtona,8
+TP-OKE,2131,05,rondo Waszyngtona,9
+TP-OKE,7003,04,most Poniatowskiego,10
+TP-OKE,7041,06,Muzeum Narodowe,11
+TP-OKE,7033,06,Krucza,12
+TP-OKE,7013,10,Centrum,13
+TP-OKE,7002,08,Dw.Centralny,14
+TP-OKE,4052,04,pl.Starynkiewicza,15
+TP-OKE,4001,06,pl.Zawiszy,16
+TP-OKE,4002,02,Ochota-Ratusz,17
+TP-OKE,4003,08,pl.Narutowicza,18
+TP-OKE,4121,04,Wawelska,19
+TP-OKE,4004,04,Och-Teatr,20
+TP-OKE,4005,04,Bitwy Warszawskiej 1920 r.,21
+TP-OKE,4137,02,Hale Banacha,22
+TP-OKE,4006,04,Dickensa,23
+TP-OKE,4007,04,Korotyńskiego,24
+TP-OKE,4008,04,PKP Rakowiec,25
+TP-OKE,4010,04,Włochy-Ratusz,26
+TP-OKE,4011,04,Hynka,27
+TP-OKE,4012,04,Krakowiaków,28
+TP-OKE,4013,02,Lipowczana,29
+TP-OKE,4014,04,Instytut Lotnictwa,30
+TZ-OKE2,4015,03,P+R Al.Krakowska,1
+TZ-OKE2,4015,04,P+R Al.Krakowska,2
+TZ-OKE2,4014,03,Instytut Lotnictwa,3
+TZ-OKE2,4013,01,Lipowczana,4
+TZ-OKE2,4012,03,Krakowiaków,5
+TZ-OKE2,4011,03,Hynka,6
+TZ-OKE2,4010,03,Włochy-Ratusz,7
+TZ-OKE2,4008,03,PKP Rakowiec,8
+TZ-OKE2,4007,03,Korotyńskiego,9
+TZ-OKE2,4006,03,Dickensa,10
+TZ-OKE2,4137,01,Hale Banacha,11
+TZ-OKE2,4005,03,Bitwy Warszawskiej 1920 r.,12
+TZ-OKE2,4004,03,Och-Teatr,13
+TZ-OKE2,4121,03,Wawelska,14
+TZ-OKE2,4003,07,pl.Narutowicza,15
+TZ-OKE2,4002,01,Ochota-Ratusz,16
+TZ-OKE2,4001,05,pl.Zawiszy,17
+TZ-OKE2,4052,03,pl.Starynkiewicza,18
+TZ-OKE2,7002,07,Dw.Centralny,19
+TZ-OKE2,7013,09,Centrum,20
+TZ-OKE2,7033,05,Krucza,21
+TZ-OKE2,7041,05,Muzeum Narodowe,22
+TZ-OKE2,7003,03,most Poniatowskiego,23
+TZ-OKE2,2131,07,rondo Waszyngtona,24
+TZ-OKE2,2131,08,rondo Waszyngtona,25
+TZ-OKE2,2001,05,al.Zieleniecka,26
+TZ-OKE2,1001,06,Kijowska,27
+TZ-OKE2,1028,02,Dw.Wschodni (Kijowska),28
+TZ-OKE2,1029,02,Zajezdnia Praga,29
+TZ-OKE3,4015,03,P+R Al.Krakowska,1
+TZ-OKE3,4015,04,P+R Al.Krakowska,2
+TZ-OKE3,4014,03,Instytut Lotnictwa,3
+TZ-OKE3,4013,01,Lipowczana,4
+TZ-OKE3,4012,03,Krakowiaków,5
+TZ-OKE3,4011,03,Hynka,6
+TZ-OKE3,4010,03,Włochy-Ratusz,7
+TZ-OKE3,4008,03,PKP Rakowiec,8
+TZ-OKE3,4007,03,Korotyńskiego,9
+TZ-OKE3,4006,03,Dickensa,10
+TZ-OKE3,4137,01,Hale Banacha,11
+TZ-OKE3,4005,03,Bitwy Warszawskiej 1920 r.,12
+TZ-OKE3,4004,03,Och-Teatr,13
+TZ-OKE3,4121,03,Wawelska,14
+TZ-OKE3,4003,09,pl.Narutowicza,15
+TZ-OKE3,4028,03,Raszyńska,16
+TZ-OKE3,4153,01,NIK,17
+TZ-OKE3,7090,05,Nowowiejska,18
+TZ-OKE3,7093,03,GUS,19
+TZ-OKE3,7094,03,Biblioteka Narodowa,20
+TZ-OKE3,3228,03,Metro Pole Mokotowskie,21
+TZ-OKE3,3118,01,Kielecka,22
+TZ-OKE3,3286,03,Rakowiecka-Sanktuarium,23
+TZ-OKE3,3237,03,Kulskiego,24
+TZ-OKE3,3238,03,Wołoska-Szpital,25
+TZ-OKE3,3239,03,Wołoska,26
