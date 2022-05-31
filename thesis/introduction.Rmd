@@ -1,0 +1,23 @@
+---
+title: " "
+output: 
+  html_document: default
+  pdf_document: default
+---
+
+# WSTĘP
+
+Celem niniejszej pracy jest zaprojektowanie i wdrożenie systemu do analizy strumieniowej danych z portalu internetowego [Twitter](). Klient zainteresowany wdrożeniem takiego rozwiązania jest zainteresowany zbadaniem profilu użytkowników wypowiadających się w tematyce związanej z wojną Ukraińsko-Rosyjską rozpoczętą 24 lutego 2022 roku. 
+
+W obszarze zainteresowań klienta pod kątem biznesowym jest:
+
+-   Analiza nacechowania emocjonalnego (ang. _sentiment_) treści wiadomości udostępnianych przez użytkowników oraz poziomu obiektywności wypowiedzi (ang. _subjectivity_)
+-   Najczęściej używane słowa (w nawiązaniu) do nacechowania emocjonalnego treści
+-   Podstawowe metryki typu ilość wypowiadających się użytkowników, czas utworzenia wiadomości oraz określenie rejonu geograficznego skąd pochodzi użytkownik
+
+Dodatkowo system powinien spełniać wymagania techniczne:
+
+-   Powinien powstać całkowicie w chmurze obliczeniowej (klient posiada infrastrukturę chmury AWS)
+-   Powinien być skalowalny w razie potrzeby zwiększenia przepustowości lub powstania nowej potrzeby biznesowej (analizy odrębnego tematu)
+-   Zarówno dane surowe jak i wyniki analizy powinny być przetrzymywane w bazie danych
+-   System powinien być odporny na uszkodzenia i operować w trybie ciągłym (klient oczekuje wyników w odstępach czasowych rzędu ~1 minuty)

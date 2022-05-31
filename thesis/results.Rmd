@@ -1,0 +1,249 @@
+---
+title: " "
+output: 
+  html_document: default
+  pdf_document: default
+---
+
+# WYNIKI
+
+## SCHEMAT ROZWIĄZANIA
+
+Aby spełnić oczekiwania klienta zaproponowano klasyczną architekturę *Kappa*. Architektura ta ...
+
+Dane pobierane są z serwisu Twitter poprzez udostępniony przez producenta interfejs programowania aplikacji (ang. *application programming interface* - API) [Adres dokumentacji](), następnie przekazywane w formacie JSON do klastra 3 maszyn z systemem Kafka zarządzanym przez menedżer zasobów Zookeeper, gdzie wiadomości są przechowywane i kolejkowane a następnie strumień danych rozdziela się na dwie ścieżki.
+
+1.  Poprzez łącznik surowe dane przekazywane są do klastra z bazą MongoDB
+2.  Dane są pobierane przez proces narzędzia Spark, gdzie strumienie są analizowane strumieniowo pod kątem zawartych słów, nacechowania emocjonalnego i subiektywności, a następnie zwracane z powrotem do systemu Kafka, skąd przez łącznik trafiają również do bazy MongoDB
+
+Dane z bazy MongoDB są następnie analizowane przez przykładowy raport napisany w języku `Python`.
+
+Wszystkie wymienione serwisy zostały utworzone na wirtualnych instancjach oferowanych przez serwis EC2 (ang. *Elastic Cloud Computing*) w chmurze AWS. Wszystkie instancje utworzono we wspólnej grupie IAM umożliwiając im swobodną komunikację pomiędzy sobą w obrębie grupy. Zezwolono na nieograniczoną komunikację z internetem, natomiast do instancji z utworzonej grupy mogło połączyć się jedynie konto deweloperskie przy pomocy połączenia SSH posiadającego klucz autoryzacyjny.
+
+Dodatkowo do przechowywania danych wrażliwych (tzw. *sekretów*) wykorzystano usługę AWS `Secrets Manager`, w której przechowano indywidualny klucz identyfikacyjny (tzw. *bearer token*) do API Twittera.
+
+DOPISAĆ JAKIE POLITYKI TRZEBA BYŁO USTAWIĆ I ENDPOINTY
+
+```{r general_scheme, echo=FALSE, out.width="110%", fig.align='center', fig.cap="Ogólny schemat użytego rozwiązania"}
+library(reticulate)
+use_condaenv(params$miniconda_env_name, required = TRUE)
+source_python("figures/general_scheme.py")
+knitr::include_graphics("figures/general_scheme.png")
+```
+
+## POBIERANIE DANYCH ZE ŹRÓDŁA
+
+W celu pobrania danych z serwisu Twitter stworzony został skrypt `twitter_request.py` napisany w języku `Python`. Zadaniem tego skryptu jest wysłanie zapytania do modułu `recent` API Twittera, wstępne rozdzielenie danych na 3 podzbiory oraz przesłanie danych do systemu `Kafka`.
+
+Lista zależności niezbędna do odtworzenia środowiska w języku `Python` pozwalająca na wykonanie zapytania dostępna jest w pliku `twitter_api_requirements.txt`.
+
+Zapytanie wymagało aby w treść wiadomości była w języku angielskim (filtr `lang:en`) oraz żeby w treści wiadomości pojawiły się znaczniki (tzw. hashtagi) `#war` oraz `#ukraine` lub `#russia`.
+
+W przypadku udanego zapytania otrzymywane są 3 podzbiory danych w postaci zagnieżdżonej listy klucz-wartość:
+
+1.  Podzbiór `data` zawiera metadane dotyczące pojedynczej wiadomości:
+
+-   `id` unikalny klucz identyfikacyjny dla wiadomości
+-   `author_id` unikalny klucz identyfikacyjny dla użytkownika Twittera
+-   `created_at` czas i data utworzenia wiadomości (UTC?)
+-   `text` treść wiadomości
+-   `public_metrics` metryki wiadomości (np. liczba ponownych udostępnień czy ilość reakcji na wiadomość)
+-   `geo` informacje geolokalizacyjne
+-   `context_annotations` tematyczne zaklasyfikowanie wiadomości do kategorii utworzonych przez system Twitter
+
+2.  Podzbiór `users` zawiera dane użytkownika:
+
+-   `id` unikalny klucz identyfikacyjny dla użytkownika Twittera
+-   `created_at` czas i data utworzenia konta w systemie (UTC?)
+-   `description` opis danego użytkownika
+-   `pinned_teet_id` ???
+-   `public_metrics` metryki danego konta (np. liczba osób śledząca dane konto)
+-   `verified` informacja czy konto zostało uznane za zweryfikowane czy nie
+
+3.  Podzbiór `places` zawiera dane lokalizacyjne:
+
+-   `full_name` pełna nazwa lokalizacji
+-   `country` nazwa kraju
+-   `country_code` kod identyfikacyjny kraju
+-   `geo` dane GPS
+-   `name` nazwa lokalizacji
+-   `place_type` typ lokalizacji
+
+Zapytania są generowane w powtórzeniach z interwałami od 1s do 10s jak również ilość wiadomości pobieranych przy pojedynczym zapytaniu zawiera się w zakresie od 10 do 100. Losowy wybór interwału czasowego jak i ilość wiadomości został zastosowany w celu zbadania zachowania systemu w przypadku różnych poziomów obciążeń systemu. Losowość zapytań można dezaktywować przy użyciu flagi `randomize_request=False`.
+
+## PRZETWARZANIE DANYCH
+
+### Schemat Kafka
+
+Dane pobrane przez skrypt `twitter_request.py` są następnie przesyłane do klastra 3 instancji EC2 z uruchomionymi procesami Kafka, stanowiące tzw. brokery Kafka. Zastosowanie 3 brokerów pozwoliło na rozproszony przesył danych oraz zastosowanie replikacji danych na poziomie 3 replik. Biorąc pod uwagę maksymalne obciążenie systemu do 300 zdarzeń na sekundę (3 podzbiory x 1s x 100 zdarzeń) użycie 3 brokerów `t3.medium` wydaje się optymalnym zastosowaniem dla tej ilości danych. Użyta wersja `Kafki` (2.6.0) wymaga również uruchmionego procesu `Zookeeper` koordynującego pracę brokerów `Kafka`. Zdarzenia przetwarzane przez `Kafkę` trafiają do bazy danych MongoDB. W trakcie przetwarzania modyfikowane są klucze zdarzeń by zoptymalizować przechowywanie danych w bazie (patrz [łączniki `kafka`](#LK))
+
+```{r kafka_scheme, echo=FALSE, out.height="65%", fig.align='center', fig.cap="Schemat Kafka"}
+library(reticulate)
+use_condaenv(params$miniconda_env_name, required = TRUE)
+source_python("figures/kafka_scheme2.py")
+knitr::include_graphics("figures/kafka_scheme2.png")
+```
+
+#### Tematy Kafka {-}
+
+Na potrzeby analizy utworzono 3 tematy (ang. *topics*) dla danych nieprzetworzonych: `tweets`, `users` oraz `places`.
+
+Wszystkie tematy zostały utworzone z flagą `--replication-factor 3` oraz `--partitions 25`. Flaga `--replication-factor` odpowiada za poziom repilkacji danych i może być dostosowywana dla każdego z tematów osobno. Zastosowanie replikacji z wartością 3 powoduje że dane pobierane przez każdy temat będą replikowane na każdy z brokerów. Z kolei flaga `--partitions` wskazuje na ile części zostanie podzielony temat w trakcie okresu przechowywania danych w systemie. Wartość 25 została wybrana ponieważ ...
+
+Dodatkowo, w celu zapewnienia równomiernego rozmieszczenia danych na partycjach zastosowano klucze partycjonowania tematów. Użycie takiego klucza powoduje, że zdarzenia z tym samym kluczem zawsze trafiają na tę samą partycję, co ułatwia określenie kolejności zdarzeń, ponieważ Kafka nie gwarantuje przesyłania zdarzeń w kolejności pomiędzy partycjami. W tym przypadku jako klucze zastosowano klucz `author_id` dla tematu `tweets` oraz `id` odpowiednio dla tematów `users` i `places`. 
+
+### Łączniki Kafka {#LK}
+
+W celu przesłania danych z systemu `Kafka` do bazy danych `MongoDB` (patrz [PRZECHOWYWANIE DANYCH](#PD)) zastosowano łącznik typu "sink". Zadaniem pojedynczego łącznika jest zbieranie zdarzeń przetworzonych przez strumień `Kafka` i przesłanie ich do docelowej bazy danych. Łączniki są stosowane zamiennie z konsumentami strumieni (wbudowane narzędzie `Kafka`) i ułatwiają integrację z aplikacjami dostarczającymi danych do `Kafki` jak i pobierającymi z niej dane bez konieczności ingerencji w kod źródłowy tych aplikacji. [link]()
+
+Każdy z tematów przetwarzanych przez system `Kafa` posiada własny łącznik odpowiadający za przesył danych. Na potrzeby analizy każdy z 3 łączników jest osobnym procesem włączonym na osobnym brokerze `Kafka`. W przypadku łączników zdecydowano się na zaakceptowanie ryzyka związanego z tymczasową niedostępnością danych związaną z awarią i zastosowano łącznik typu "standalone".
+
+Łączniki `Kafka` pozwalają modyfikować pojedyncze zdarzenia w tematach przy użyciu API SMT (ang. Single Message Transforms). Dzięki SMT możliwe są proste modyfikacje zdarzeń - zarówno kluczy jak i wartości. Jednak użycie nie jest zalecane do bardziej skomplikowanych modyfikacji danych. W obecnej pracy wykorzystano SMT do zdefiniowania odpowiedniego klucza zdarzenia, który posłuży jako klucz partycjonowania w bazie MongoDB.
+
+W przypadku tematu `tweets` kluczem w partycji `Kafka` jest pole `author_id`, a w bazie MongoDB korzystniejszym rozwiązaniem będzie zastosowanie klucza `id`, który jest unikalny, co pozwoli uniknąć duplikacji danych w bazie. Pole `id` nie znajduje się jednak w częsci zdarzenia zawierającej klucze, więc wymagało to użycia transformacji `ValueToKey` a następnie zmienić nazwę pola z `id` na `_id` wymagane przez MongoDB przy użyciu transformacji `ReplaceField$Key`.
+
+Modyfikacje tematów `users` oraz `places` wymagały jedynie nadania kluczowi partycjonowania użytego w `Kafce` nazwy `_id` jako, że ten sam klucz zostanie użyty również w MongoDB.
+
+Poniżej zostały zamieszczone pliki konfiguracyjne łączników, wraz z zdefiniowanymi transformacjami SMT.
+
+-   `tweets`
+```
+xyz
+```
+-   `users`
+```
+xyz
+```
+-   `places`
+```
+xyz
+```
+
+Dzięki zastosowaniu systemu `Kafka` zdarzenia, które trafią do strumienia są przechowywane przez tydzień, co pozwala w łatwy sposób odzyskać dane, które nie zostały pobrane przez łączniki w czasie gdy były nieaktywne.
+
+
+### Spark Streaming
+
+Analizę nacechowania emocjonalnego wiadomości przeprowadzono za pomocą narzędzia `Spark` oferującego API do strumieniowego przetwarzania danych `Spark Streaming`. Ze względu na niewielką ilość danych analizę przeprowadzono na pojedynczej instancji EC2
+
+## PRZECHOWYWANIE DANYCH {#PD}
+
+### Schemat bazy MongoDB
+
+Schemat bazy danych został zaprezentowany na rycinie 2.
+
+Na potrzeby długoterminowego przechowywania danych utworzono bazę danych MongoDB w klastrze z replikacją. Skonfigurowano dwie repliki stanowiące pojedynczy `replicaSet` wchodzący w skład jednego tzw. "sharda". Konfiguracja w postaci pojedynczego "sharda" co prawda powoduje, że dane nie są rozpraszane na wiele instancji `MongoDB` (poza replikacją w obrębie `replicaSet` - na rycinie 2 replikacja zaznaczona przerywaną linią) ale zwiększają dostępność danych w przypadku gdy jedna z replik przestanie działać. 
+
+Dodatkowo dodana została pojedyncza instancja serwera konfigurującego tzw. `config server`. Serwer ten przechowuje metadane o klastrze typu "sharded" - m.in. informacje o statusie danych oraz ich organizacji w klastrze. W systemach produkcyjnych rekomendowane jest zastosowanie replikacji równie dla `config servera` ponieważ w przypadku awarii kontroler `mongos` nie będzie w stanie odpowiednio obsłużyć zapytań z aplikacji zewnętrznych.
+
+Dodatkowo na jednym z serwerów typu `shard` uruchomiony został proces `mongos` pełniący rolę kontrolera pomiędzy shardami i config serverem. To właśnie z procesem `mongos` łączą się aplikacje korzystające z danych z bazy MongoDB. Istnieją co najmniej trzy możliwości implementacji procesu `mongos` [link](https://www.mongodb.com/docs/manual/core/sharded-cluster-components/#number-of-mongos-and-distribution): 
+
+1. na instancjach razem z aplikacją korzystającą z bazy - ogranicza opóźnienie związane z wysyłaniem zapytań po sieci pomiędzy aplikacją a kontrolerem
+2. na instancjach gospodarza typu primary (jak w przypadku tej pracy) - uniezależnia proces `mongos` od aplikacji, ale wprowadza ograniczenie w postaci pamięci - musi ona być dzielona pomiędzy procesem `mongod` 
+3. na instancjach niezależnych - uniezależnia proces `mongos` od aplikacji i zwalnia pamięć dla procesu `mongod`
+
+W obecnej pracy zastosowano podejście 2 jako że ilości danych i zużycie pamięci są niewielkie. 
+
+```{r mongo_scheme, echo=FALSE, out.height="80%", out.width="90%", fig.align='center', fig.cap="Schemat bazy MongoDB"}
+library(reticulate)
+use_condaenv(params$miniconda_env_name, required = TRUE)
+source_python("figures/mongoDB_scheme.py")
+knitr::include_graphics("figures/mongoDB_scheme.png")
+```
+
+### Szczegóły wdrożenia
+
+W celu utworzenia config serwera użyto skryptu `setup_mongo_configsvr.sh`, który instaluje mongoDB, modyfikuje plik konfiguracyjny `mongod.conf` oraz inicjalizuje `replicaSet` o nazwie _"config"_. Poniżej zamieszczono przykładowy plik konfiguracyjny oraz kod inicjalizujący:
+
+* Plik konfiguracyjny:
+```
+storage:
+  dbPath: /var/lib/mongodb
+  journal:
+    enabled: true
+systemLog:
+  destination: file
+  logAppend: true
+  path: /var/log/mongodb/mongod.log
+net:
+  port: 27019
+  bindIp: 0.0.0.0
+processManagement:
+  timeZoneInfo: /usr/share/zoneinfo
+replication:
+  replSetName: config
+sharding:
+  clusterRole: configsvr
+
+```
+Kod inicjalizujący `repicaSet` z jedną repliką:
+```
+rs.initiate({
+  _id: "config",
+  configsvr: true,
+  members: [{
+    _id: 0,
+    host: "<prywante ip instancji config>:27019"
+  }]
+})
+```
+
+W przypadku serwera typu shard użyto skryptu `setup_mongo_shardsvr.sh`, który również instaluje mongoDB i modyfikuje plik konfiguracyjny. Poniżej zamieszczono przykładowy plik konfiguracyjny (umiesczono tylko różnice w stosunku do config serwera) oraz kod inicjalizujący `replicaSet` dla pojedynczego serwera shard z dwoma replikami:
+
+* Plik konfiguracyjny (różnice):
+```
+net:
+  port: 27018
+  bindIp: 0.0.0.0
+replication:
+  replSetName: shard
+sharding:
+  clusterRole: shardsvr
+```
+
+* Kod inicjalizujący `replicaSet` (wykonywany tylko na jednym z serwerów):
+```
+rs.initiate({
+  _id: "shard",
+  members: [
+  {_id: 0, host: "<prywante ip instancji 1>:27018"},
+  {_id: 1, host: "<prywante ip instancji 2>:27018"}]
+})
+```
+
+Po inicjalizacji `replicaSet` dla serwerów typu shard, na jednej z instancji, w tle został uruchomiony proces `mongos` przy użyciu polecenia `mongos --configdb config/"<prywante ip instancji config>:27019" --bind_ip 0.0.0.0`
+
+Kolejnym krokiem było zarejestrowanie sharda (dwóch replik) jako klaster oraz utworzenie bazy danych i kolekcji do przechowywania danych. 
+
+Na instancji z aktywnym procesem `mongos` wykonano poniższe polecenia:
+
+1. Rejestracja sharda
+```
+mongo --port 27017 
+sh.addShard('shard/<prywante ip instancji 1>:27018,<prywante ip instancji 2>:27018')
+```
+2. Utworzenie bazy i kolekcji
+```
+mongo --port 27018 
+use twitter 
+db.createCollection('tweets')
+db.createCollection('users')
+db.createCollection('places')"
+```
+3. Rejestracja klucza partycjonowania danych po shardach (klucze oomówiono w sekcji `Łączniki Kafka`)
+```
+mongo --port 27017 
+sh.enableSharding('twitter')
+
+sh.shardCollection('twitter.tweets', {_id : 1})
+sh.shardCollection('twitter.users', {_id : 1})
+sh.shardCollection('twitter.places', {_id : 1})
+```
+
+
+
+## WIZUALIZACJA DANYCH
+
+### Analiza sentymentu
+
+### Analiza użytkowników

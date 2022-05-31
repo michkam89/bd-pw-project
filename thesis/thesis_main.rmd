@@ -1,0 +1,96 @@
+---
+always_allow_html: true
+fontfamily: bookman
+geometry: "left = 2.5cm, right = 2cm, top = 2cm, bottom = 2cm"
+header-includes:
+  - \usepackage{float}
+  - \usepackage{sectsty}
+  - \usepackage{paralist}
+  - \usepackage{setspace}\spacing{1.3}
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \usepackage{dcolumn}
+  - \usepackage{natbib}\bibliographystyle{agsm}
+  - \usepackage[nottoc, numbib]{tocbibind}
+output:
+  pdf_document: 
+    number_sections: yes
+  html_document:
+    number_sections: yes
+params:
+  miniconda_path: ~/miniconda3
+  miniconda_env_name: big_data_proj
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(reticulate)
+Sys.setenv(
+  RETICULATE_MINICONDA_PATH = params$miniconda_path,
+  RETICULATE_PYTHON = fs::path(params$miniconda_path, "envs", params$miniconda_env_name, "bin", "python")
+)
+``` 
+
+\begin{centering}
+
+```{r pw_logo, echo=F, out.width="16cm", out.height="2.54cm"}
+knitr::include_graphics("figures/pw_logo.png")
+```
+
+\vspace{1cm}
+\normalsize
+Instytut informatyki
+
+\vspace{0.5cm}
+
+\Large
+Studia Podyplomowe \\
+Big Data - przetwarzanie i analiza dużych zbiorów danych
+
+\vspace{2cm}
+PRACA KOŃCOWA
+
+\vspace{2cm}
+
+Michał Kamiński
+
+\vspace{1cm}
+
+{\bf Projektowanie systemu do strumieniowej analizy wiadomości \\pochodzących od użytkowników portalu społecznościowego Twitter}
+
+\vspace{5cm}
+
+\normalsize
+Warszawa, 2022
+
+\end{centering}
+
+\newpage
+
+\renewcommand{\contentsname}{Spis Treści}
+\tableofcontents
+
+
+\newpage
+```{r summary, child = "summary.Rmd"}
+```
+
+\newpage
+
+```{r introduction, child="introduction.Rmd"}
+```
+
+\newpage
+
+```{r results, child="results.Rmd"}
+```
+
+# DYSKUSJA I ZAKOŃCZENIE
+
+\newpage
+
+# BIBLIOGRAFIA 
+
+\newpage
+
+```{r appendix, child="appendix.Rmd"}
+```
