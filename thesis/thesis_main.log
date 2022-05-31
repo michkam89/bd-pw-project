@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.24)  31 MAY 2022 22:21
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.24)  1 JUN 2022 01:21
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -403,7 +403,7 @@ Package hyperref Info: Link coloring OFF on input line 77.
 Package lastpage Info: Please have a look at the pageslts package at
 (lastpage)             https://www.ctan.org/pkg/pageslts
 (lastpage)             ! on input line 77.
-<figures/pw_logo.png, id=80, 1511.6475pt x 240.14719pt>
+<figures/pw_logo.png, id=92, 1511.6475pt x 240.14719pt>
 File: figures/pw_logo.png Graphic file (type png)
 <use figures/pw_logo.png>
 Package pdftex.def Info: figures/pw_logo.png  used on input line 82.
@@ -429,76 +429,67 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 \openout4 = `thesis_main.toc'.
 
 [2] [3]
-
-Package hyperref Warning: Suppressing link with empty target on input line 139.
-
-LaTeX Font Info:    Trying to load font information for TS1+pbk on input line 149.
+LaTeX Font Info:    Trying to load font information for T1+pcr on input line 140.
+(/home/michalk/.TinyTeX/texmf-dist/tex/latex/psnfss/t1pcr.fd
+File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
+)
+LaTeX Font Info:    Trying to load font information for TS1+pbk on input line 150.
 (/home/michalk/.TinyTeX/texmf-dist/tex/latex/psnfss/ts1pbk.fd
 File: ts1pbk.fd 2001/06/04 font definitions for TS1/pbk.
 )
 LaTeX Font Info:    Font shape `TS1/pbk/m/n' in size <10> not available
-(Font)              Font shape `TS1/pbk/l/n' tried instead on input line 149.
+(Font)              Font shape `TS1/pbk/l/n' tried instead on input line 150.
 LaTeX Font Info:    Font shape `T1/pbk/m/it' in size <10> not available
-(Font)              Font shape `T1/pbk/l/it' tried instead on input line 149.
+(Font)              Font shape `T1/pbk/l/it' tried instead on input line 150.
 [4]
 LaTeX Font Info:    Font shape `T1/pbk/m/n' in size <12> not available
-(Font)              Font shape `T1/pbk/l/n' tried instead on input line 186.
+(Font)              Font shape `T1/pbk/l/n' tried instead on input line 209.
 LaTeX Font Info:    Font shape `T1/pbk/b/n' in size <12> not available
-(Font)              Font shape `T1/pbk/db/n' tried instead on input line 186.
+(Font)              Font shape `T1/pbk/db/n' tried instead on input line 209.
+<figures/general_scheme2.png, id=142, 2664.95625pt x 936.49875pt>
+File: figures/general_scheme2.png Graphic file (type png)
+<use figures/general_scheme2.png>
+Package pdftex.def Info: figures/general_scheme2.png  used on input line 247.
+(pdftex.def)             Requested size: 534.85236pt x 187.95375pt.
 
-Package hyperref Warning: Suppressing link with empty target on input line 193.
-
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 212.
-(/home/michalk/.TinyTeX/texmf-dist/tex/latex/psnfss/t1pcr.fd
-File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
-)
-<figures/general_scheme.png, id=125, 2015.53pt x 953.5625pt>
-File: figures/general_scheme.png Graphic file (type png)
-<use figures/general_scheme.png>
-Package pdftex.def Info: figures/general_scheme.png  used on input line 232.
-(pdftex.def)             Requested size: 534.88177pt x 253.05661pt.
-
-Overfull \hbox (48.62416pt too wide) in paragraph at lines 232--233
+Overfull \hbox (48.59474pt too wide) in paragraph at lines 247--248
  [][] 
+ []
+
+
+Overfull \hbox (24.63055pt too wide) in paragraph at lines 258--265
+\T1/pbk/l/n/10 W celu po-bra-nia danych z ser-wisu Twit-ter, w j�zyku \T1/pcr/m/n/10 Python \T1/pbk/l/n/10 napisany zosta� skrypt \T1/pcr/m/n/10 twitter_request.py\T1/pbk/l/n/10 .
  []
 
 [5] [6
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.335   \texttt
-               {name} nazwa lokalizacji <./figures/general_scheme.png>]
-<figures/kafka_scheme2.png, id=145, 1560.83125pt x 1412.27625pt>
+l.339 \end{enumerate}
+                      <./figures/general_scheme2.png>]
+<figures/kafka_scheme2.png, id=163, 1560.83125pt x 1412.27625pt>
 File: figures/kafka_scheme2.png Graphic file (type png)
 <use figures/kafka_scheme2.png>
-Package pdftex.def Info: figures/kafka_scheme2.png  used on input line 369.
-(pdftex.def)             Requested size: 489.30664pt x 442.73596pt.
-
-Overfull \hbox (3.04903pt too wide) in paragraph at lines 369--370
- [][] 
- []
-
-
-Package hyperref Warning: Suppressing link with empty target on input line 413.
-
+Package pdftex.def Info: figures/kafka_scheme2.png  used on input line 387.
+(pdftex.def)             Requested size: 291.75012pt x 263.98225pt.
 [7] [8
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.414 
-       <./figures/kafka_scheme2.png>] [9]
-<figures/mongoDB_scheme.png, id=173, 1183.42125pt x 1264.725pt>
+l.448 Ł
+        ączniki \texttt{Kafka} pozwalają modyfikować pojedyncze zdarzenia w <./figures/kafka_scheme2.png>] [9]
+<figures/mongoDB_scheme.png, id=189, 1183.42125pt x 1264.725pt>
 File: figures/mongoDB_scheme.png Graphic file (type png)
 <use figures/mongoDB_scheme.png>
-Package pdftex.def Info: figures/mongoDB_scheme.png  used on input line 543.
+Package pdftex.def Info: figures/mongoDB_scheme.png  used on input line 562.
 (pdftex.def)             Requested size: 437.62427pt x 467.69005pt.
 [10] [11
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.584 \end{verbatim}
+l.603 \end{verbatim}
                      <./figures/mongoDB_scheme.png>] [12]
-Overfull \hbox (17.74239pt too wide) in paragraph at lines 659--659
+Overfull \hbox (17.74239pt too wide) in paragraph at lines 678--678
 []\T1/pcr/m/n/10 sh.addShard('shard/<prywante ip instancji 1>:27018,<prywante ip instancji 2>:27018')[] 
  []
 
@@ -506,25 +497,25 @@ Overfull \hbox (17.74239pt too wide) in paragraph at lines 659--659
 AED: lastpage setting LastPage
 [16] (./thesis_main.aux)
 Package rerunfilecheck Info: File `thesis_main.out' has not changed.
-(rerunfilecheck)             Checksum: D7D87E4B922EDCD6C592C4C28C23843A;2637.
+(rerunfilecheck)             Checksum: 439FAFE0600771CD218106347CB78662;3144.
  )
 (\end occurred inside a group at level 1)
 
 ### semi simple group (level 1) entered at line 64 (\begingroup)
 ### bottom level 
 Here is how much of TeX's memory you used:
- 11711 strings out of 480260
- 181225 string characters out of 5894160
- 479049 words of memory out of 5000000
- 29369 multiletter control sequences out of 15000+600000
+ 11725 strings out of 480260
+ 181463 string characters out of 5894160
+ 479185 words of memory out of 5000000
+ 29373 multiletter control sequences out of 15000+600000
  481774 words of font info for 52 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 72i,6n,77p,261b,1950s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 72i,6n,77p,263b,1948s stack positions out of 10000i,1000n,20000p,200000b,200000s
 {/home/michalk/.TinyTeX/texmf-dist/fonts/enc/dvips/base/8r.enc}</home/michalk/.TinyTeX/texmf-dist/fonts/type1/urw/bookman/ubkd8a.pfb></home/michalk/.TinyTeX/texmf-dist/fonts/type1/urw/bookman/ubkl8a.pfb></home/michalk/.TinyTeX/texmf-dist/fonts/type1/urw/bookman/ubkli8a.pfb></home/michalk/.TinyTeX/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb>
-Output written on thesis_main.pdf (16 pages, 372302 bytes).
+Output written on thesis_main.pdf (16 pages, 394862 bytes).
 PDF statistics:
- 256 PDF objects out of 1000 (max. 8388607)
- 221 compressed objects within 3 object streams
- 72 named destinations out of 1000 (max. 500000)
- 173 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 285 PDF objects out of 1000 (max. 8388607)
+ 249 compressed objects within 3 object streams
+ 82 named destinations out of 1000 (max. 500000)
+ 197 words of extra memory for PDF output out of 10000 (max. 10000000)
 

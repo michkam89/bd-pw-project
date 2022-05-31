@@ -10,7 +10,7 @@ from diagrams.generic.blank import Blank
 from diagrams.programming.language import Python
 from diagrams.custom import Custom
 
-with Diagram(direction="TB", filename="figures/general_scheme", show=True):
+with Diagram(direction="LR", filename="figures/general_scheme2", show=False):
     
     twitter = Custom("Twitter API", "Twitter-logo.svg")
     api = Python("Polecenie własne")

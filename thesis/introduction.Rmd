@@ -7,7 +7,7 @@ output:
 
 # WSTĘP
 
-Celem niniejszej pracy jest zaprojektowanie i wdrożenie systemu do analizy strumieniowej danych z portalu internetowego [Twitter](). Klient zainteresowany wdrożeniem takiego rozwiązania jest zainteresowany zbadaniem profilu użytkowników wypowiadających się w tematyce związanej z wojną Ukraińsko-Rosyjską rozpoczętą 24 lutego 2022 roku. 
+Celem niniejszej pracy jest zaprojektowanie i wdrożenie systemu do analizy strumieniowej danych z portalu internetowego `Twitter`(1). Klient chcący wdrożyć takie rozwiązanie jest zainteresowany zbadaniem profilu użytkowników wypowiadających się w tematyce związanej z wojną Ukraińsko-Rosyjską rozpoczętą 24 lutego 2022 roku. 
 
 W obszarze zainteresowań klienta pod kątem biznesowym jest:
 
@@ -17,7 +17,7 @@ W obszarze zainteresowań klienta pod kątem biznesowym jest:
 
 Dodatkowo system powinien spełniać wymagania techniczne:
 
--   Powinien powstać całkowicie w chmurze obliczeniowej (klient posiada infrastrukturę chmury AWS)
--   Powinien być skalowalny w razie potrzeby zwiększenia przepustowości lub powstania nowej potrzeby biznesowej (analizy odrębnego tematu)
+-   Powinien powstać całkowicie w chmurze obliczeniowej (klient posiada infrastrukturę chmury `AWS` (2))
+-   Powinien być skalowalny w razie potrzeby zwiększenia przepustowości lub powstania nowej potrzeby biznesowej (analizy odrębnego zagadnienia)
 -   Zarówno dane surowe jak i wyniki analizy powinny być przetrzymywane w bazie danych
 -   System powinien być odporny na uszkodzenia i operować w trybie ciągłym (klient oczekuje wyników w odstępach czasowych rzędu ~1 minuty)

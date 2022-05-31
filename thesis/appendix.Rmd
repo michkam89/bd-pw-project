@@ -6,3 +6,11 @@ output:
 ---
 
 # DODATEK
+
+## Wersje użytego oprogramowania
+
+* Apache Kafka v2.6.0
+* MongoDB v4.4
+* Kafka-MongoDB connector v1.6
+* Python v3.10
+* Twitter API v2

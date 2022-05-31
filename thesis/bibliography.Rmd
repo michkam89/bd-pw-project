@@ -1,0 +1,15 @@
+---
+title: " "
+output: 
+  html_document: default
+  pdf_document: default
+---
+
+# BIBLIOGRAFIA
+
+1.    Strona główna portalu Twitter, *www.twitter.com*
+2.    Strona główna portalu AWS, *www.aws.amazon.com*
+3.    Strona dla developerów związana z serwisem Twitter, *www.developer.twitter.com*
+4.    Repozytorium kodu programu Apache Kafka, *https://github.com/apache/kafka*
+5.    Repozytorium kodu programu mongoDB, *https://github.com/mongodb/mongo*
+6. Van Rossum, G. & Drake, F.L., 2009. *Python 3 Reference Manual*, Scotts Valley, CA: CreateSpace.
