@@ -88,11 +88,9 @@ Warszawa, 2022
 
 ## Dalsze kroki 
 
-Dane są pobierane przez proces narzędzia Spark, gdzie strumienie są analizowane strumieniowo pod kątem zawartych słów, nacechowania emocjonalnego i subiektywności, a następnie zwracane z powrotem do systemu Kafka, skąd przez łącznik trafiają również do bazy MongoDB.
-
 ### Spark Streaming
 
-Analizę nacechowania emocjonalnego wiadomości przeprowadzono za pomocą narzędzia `Spark` oferującego API do strumieniowego przetwarzania danych `Spark Streaming`. Ze względu na niewielką ilość danych analizę przeprowadzono na pojedynczej instancji EC2
+`<placeholder>`
 
 \newpage
 

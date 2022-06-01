@@ -48,7 +48,7 @@ W przypadku udanego zapytania otrzymywane są 3 podzbiory danych w postaci zagni
 
 -   `id` unikalny klucz identyfikacyjny dla wiadomości
 -   `author_id` unikalny klucz identyfikacyjny dla użytkownika Twittera
--   `created_at` czas i data utworzenia wiadomości (UTC?)
+-   `created_at` czas i data utworzenia wiadomości
 -   `text` treść wiadomości
 -   `public_metrics` metryki wiadomości (np. liczba ponownych udostępnień czy ilość reakcji na wiadomość)
 -   `geo` informacje geolokalizacyjne
@@ -59,7 +59,7 @@ W przypadku udanego zapytania otrzymywane są 3 podzbiory danych w postaci zagni
 -   `id` unikalny klucz identyfikacyjny dla użytkownika Twittera
 -   `created_at` czas i data utworzenia konta w systemie (UTC?)
 -   `description` opis danego użytkownika
--   `pinned_teet_id` ???
+-   `pinned_teet_id` klucz wiadomości, utworzonej przez użytkownika
 -   `public_metrics` metryki danego konta (np. liczba osób śledząca dane konto)
 -   `verified` informacja czy konto zostało uznane za zweryfikowane czy nie
 
@@ -78,7 +78,7 @@ Zapytania są generowane w powtórzeniach z interwałami od 1s do 10s jak równi
 
 ### Schemat Klastra Kafka
 
-Dane pobrane przez skrypt `twitter_request.py` są następnie przesyłane do klastra 3 instancji EC2 z uruchomionymi procesami `Kafka`, stanowiące tzw. `brokery Kafka`. Zastosowanie 3 brokerów pozwoliło na rozproszony transfer danych oraz zastosowanie replikacji danych na poziomie 3 replik. Biorąc pod uwagę maksymalne obciążenie systemu do 300 zdarzeń na sekundę (3 podzbiory x 1s x 100 zdarzeń) użycie 3 brokerów na instancjach `t3.medium` wydaje się optymalnym zastosowaniem dla tej ilości danych. Użyta wersja `Kafki` wymaga również uruchomionego procesu `Zookeeper` koordynującego pracę brokerów `Kafka`. Zdarzenia przetwarzane przez `Kafkę` trafiają do bazy danych MongoDB. W trakcie przetwarzania modyfikowane są klucze zdarzeń by zoptymalizować przechowywanie danych w bazie (patrz [łączniki Kafka](#LK))
+Dane pobrane przez skrypt `twitter_request.py` są następnie przesyłane do klastra 3 instancji EC2 z uruchomionymi procesami `Kafka`, stanowiące tzw. `brokery Kafka`. Zastosowanie 3 brokerów pozwoliło na rozproszony transfer danych oraz zastosowanie replikacji danych na poziomie 3 replik. Biorąc pod uwagę maksymalne obciążenie systemu do 300 zdarzeń na sekundę (3 podzbiory x 1s x 100 zdarzeń) użycie 3 brokerów na instancjach `t3.medium` wydaje się optymalnym zastosowaniem dla tej ilości danych. Użyta wersja `Kafki` wymaga również uruchomionego procesu `Zookeeper` koordynującego pracę brokerów `Kafka`. Zdarzenia przetwarzane przez `Kafkę` trafiają do bazy danych MongoDB. W trakcie przetwarzania modyfikowane są klucze zdarzeń by zoptymalizować przechowywanie danych w bazie (patrz [łączniki Kafka](#LK)). Schemat systemu `Kafka` został zaprezentowany na rycinie 2.
 
 ```{r kafka_scheme, echo=FALSE, out.width="60%", out.height="60%", fig.align='center', fig.cap="Schemat Klastra Kafka"}
 library(reticulate)
@@ -109,18 +109,60 @@ Modyfikacje tematów `users` oraz `places` wymagały jedynie nadania kluczowi pa
 
 Poniżej zostały zamieszczone pliki konfiguracyjne łączników, wraz z zdefiniowanymi transformacjami SMT.
 
+\small
+
 -   `tweets`
+
 ```
-<placeholder>
+name=mongo-sink-tweets
+connector.class=com.mongodb.kafka.connect.MongoSinkConnector
+connection.uri=mongodb://<ip instancji z mongos>:27017
+database=twitter
+collection=tweets
+topics = tweets
+max.num.retries=3
+document.id.strategy.overwrite.existing=true
+
+transforms=ValueToKey,RenameField
+transforms.ValueToKey.type=org.apache.kafka.connect.transforms.ValueToKey
+transforms.ValueToKey.fields=id
+transforms.RenameField.type=org.apache.kafka.connect.transforms.ReplaceField$Key
+transforms.RenameField.renames= "id:_id"
 ```
 -   `users`
+
 ```
-<placeholder>
+name=mongo-sink-users
+connector.class=com.mongodb.kafka.connect.MongoSinkConnector
+connection.uri=mongodb://<ip instancji z mongos>:27017
+database=twitter
+collection=users
+topics = users
+max.num.retries=3
+document.id.strategy.overwrite.existing=true
+
+transforms=HoistField
+transforms.HoistField.type=org.apache.kafka.connect.transforms.HoistField$Key
+transforms.HoistField.field=_id
 ```
 -   `places`
+
 ```
-<placeholder>
+name=mongo-sink-places
+connector.class=com.mongodb.kafka.connect.MongoSinkConnector
+connection.uri=mongodb://<ip instancji z mongos>:27017
+database=twitter
+collection=places
+topics = places
+max.num.retries=3
+document.id.strategy.overwrite.existing=true
+
+transforms=HoistField
+transforms.HoistField.type=org.apache.kafka.connect.transforms.HoistField$Key
+transforms.HoistField.field=_id
 ```
+
+\normalsize
 
 Dzięki zastosowaniu systemu `Kafka`, wiadomości które trafią do strumienia są przechowywane w systemie przez tydzień, co pozwala w łatwy sposób odzyskać dane, które nie zostały pobrane przez łączniki w czasie gdy były nieaktywne.
 
@@ -128,13 +170,12 @@ Dzięki zastosowaniu systemu `Kafka`, wiadomości które trafią do strumienia s
 
 ### Schemat bazy MongoDB
 
-Schemat bazy danych został zaprezentowany na rycinie 2.
 
-Na potrzeby długoterminowego przechowywania danych utworzono bazę danych MongoDB w klastrze z replikacją. Skonfigurowano dwie repliki stanowiące pojedynczy `replicaSet` wchodzący w skład jednego tzw. "sharda". Konfiguracja w postaci pojedynczego "sharda" co prawda powoduje, że dane nie są rozpraszane na wiele instancji `MongoDB` (poza replikacją w obrębie `replicaSet` - na rycinie 2 replikacja zaznaczona przerywaną linią) ale zwiększają dostępność danych w przypadku gdy jedna z replik przestanie działać. 
+Na potrzeby długoterminowego przechowywania danych utworzono bazę danych MongoDB w klastrze z replikacją a jej schemat został zaprezentowany na rycinie 3. Skonfigurowano dwie repliki stanowiące pojedynczy `replicaSet` wchodzący w skład jednego tzw. "sharda". Konfiguracja w postaci pojedynczego "sharda" co prawda powoduje, że dane nie są rozpraszane na wiele instancji `MongoDB` (poza replikacją w obrębie `replicaSet` - na rycinie 3 replikacja zaznaczona przerywaną linią) ale zwiększają dostępność danych w przypadku gdy jedna z replik przestanie działać. 
 
 Dodatkowo dodana została pojedyncza instancja serwera konfigurującego tzw. `config server`. Serwer ten przechowuje metadane o klastrze typu "sharded" - m.in. informacje o statusie danych oraz ich organizacji w klastrze. W systemach produkcyjnych rekomendowane jest zastosowanie replikacji równie dla `config servera` ponieważ w przypadku awarii kontroler `mongos` nie będzie w stanie odpowiednio obsłużyć zapytań z aplikacji zewnętrznych.
 
-Dodatkowo na jednym z serwerów typu `shard` uruchomiony został proces `mongos` pełniący rolę kontrolera pomiędzy shardami i config serverem. To właśnie z procesem `mongos` łączą się aplikacje korzystające z danych z bazy MongoDB. Istnieją co najmniej trzy możliwości implementacji procesu `mongos` [link](https://www.mongodb.com/docs/manual/core/sharded-cluster-components/#number-of-mongos-and-distribution): 
+Dodatkowo na jednym z serwerów typu `shard` uruchomiony został proces `mongos` pełniący rolę kontrolera pomiędzy shardami i config serverem. To właśnie z procesem `mongos` łączą się aplikacje korzystające z danych z bazy MongoDB. Istnieją co najmniej trzy możliwości implementacji procesu `mongos`(7):
 
 1. na instancjach razem z aplikacją korzystającą z bazy - ogranicza opóźnienie związane z wysyłaniem zapytań po sieci pomiędzy aplikacją a kontrolerem
 2. na instancjach gospodarza typu primary (jak w przypadku tej pracy) - uniezależnia proces `mongos` od aplikacji, ale wprowadza ograniczenie w postaci pamięci - musi ona być dzielona pomiędzy procesem `mongod` 
@@ -142,7 +183,7 @@ Dodatkowo na jednym z serwerów typu `shard` uruchomiony został proces `mongos`
 
 W obecnej pracy zastosowano podejście 2 jako że ilości danych i zużycie pamięci są niewielkie. 
 
-```{r mongo_scheme, echo=FALSE, out.height="80%", out.width="90%", fig.align='center', fig.cap="Schemat bazy MongoDB"}
+```{r mongo_scheme, echo=FALSE, out.height="50%", fig.align='center', fig.cap="Schemat bazy MongoDB"}
 library(reticulate)
 use_condaenv(params$miniconda_env_name, required = TRUE)
 source_python("figures/mongoDB_scheme.py")
@@ -151,9 +192,12 @@ knitr::include_graphics("figures/mongoDB_scheme.png")
 
 ### Szczegóły wdrożenia
 
-W celu utworzenia config serwera użyto skryptu `setup_mongo_configsvr.sh`, który instaluje mongoDB, modyfikuje plik konfiguracyjny `mongod.conf` oraz inicjalizuje `replicaSet` o nazwie _"config"_. Poniżej zamieszczono przykładowy plik konfiguracyjny oraz kod inicjalizujący:
+W celu utworzenia serwera typu config użyto skryptu `setup_mongo_configsvr.sh`, który instaluje mongoDB, modyfikuje plik konfiguracyjny `mongod.conf` oraz inicjalizuje `replicaSet` o nazwie _"config"_. Poniżej zamieszczono przykładowy plik konfiguracyjny oraz kod inicjalizujący:
 
 * Plik konfiguracyjny:
+
+\small
+
 ```
 storage:
   dbPath: /var/lib/mongodb
@@ -174,7 +218,12 @@ sharding:
   clusterRole: configsvr
 
 ```
-Kod inicjalizujący `repicaSet` z jedną repliką:
+
+\normalsize
+
+* Kod inicjalizujący `repicaSet` z jedną repliką:
+
+\small
 ```
 rs.initiate({
   _id: "config",
@@ -185,10 +234,13 @@ rs.initiate({
   }]
 })
 ```
+\normalsize
 
 W przypadku serwera typu shard użyto skryptu `setup_mongo_shardsvr.sh`, który również instaluje mongoDB i modyfikuje plik konfiguracyjny. Poniżej zamieszczono przykładowy plik konfiguracyjny (umiesczono tylko różnice w stosunku do config serwera) oraz kod inicjalizujący `replicaSet` dla pojedynczego serwera shard z dwoma replikami:
 
 * Plik konfiguracyjny (różnice):
+
+\small
 ```
 net:
   port: 27018
@@ -198,8 +250,10 @@ replication:
 sharding:
   clusterRole: shardsvr
 ```
-
+\normalsize
 * Kod inicjalizujący `replicaSet` (wykonywany tylko na jednym z serwerów):
+
+\small
 ```
 rs.initiate({
   _id: "shard",
@@ -208,7 +262,7 @@ rs.initiate({
   {_id: 1, host: "<prywante ip instancji 2>:27018"}]
 })
 ```
-
+\normalsize
 Po inicjalizacji `replicaSet` dla serwerów typu shard, na jednej z instancji, w tle został uruchomiony proces `mongos` przy użyciu polecenia `mongos --configdb config/"<prywante ip instancji config>:27019" --bind_ip 0.0.0.0`
 
 Kolejnym krokiem było zarejestrowanie sharda (dwóch replik) jako klaster oraz utworzenie bazy danych i kolekcji do przechowywania danych. 
@@ -216,11 +270,15 @@ Kolejnym krokiem było zarejestrowanie sharda (dwóch replik) jako klaster oraz 
 Na instancji z aktywnym procesem `mongos` wykonano poniższe polecenia:
 
 1. Rejestracja sharda
+\small
 ```
 mongo --port 27017 
 sh.addShard('shard/<prywante ip instancji 1>:27018,<prywante ip instancji 2>:27018')
 ```
+\normalsize
 2. Utworzenie bazy i kolekcji
+
+\small
 ```
 mongo --port 27018 
 use twitter 
@@ -228,7 +286,10 @@ db.createCollection('tweets')
 db.createCollection('users')
 db.createCollection('places')"
 ```
+\normalsize
 3. Rejestracja klucza partycjonowania danych po shardach (klucze oomówiono w sekcji `Łączniki Kafka`)
+
+\small
 ```
 mongo --port 27017 
 sh.enableSharding('twitter')
@@ -237,11 +298,15 @@ sh.shardCollection('twitter.tweets', {_id : 1})
 sh.shardCollection('twitter.users', {_id : 1})
 sh.shardCollection('twitter.places', {_id : 1})
 ```
-
+\normalsize
 
 
 ## WIZUALIZACJA DANYCH
 
-### Analiza sentymentu
+### Analiza treści wiadomości
 
-### Analiza użytkowników
+`<placeholder>`
+
+### Analiza profilu użytkowników
+
+`<placeholder>`

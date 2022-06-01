@@ -12,4 +12,5 @@ output:
 3.    Strona dla developerów związana z serwisem Twitter, *www.developer.twitter.com*
 4.    Repozytorium kodu programu Apache Kafka, *https://github.com/apache/kafka*
 5.    Repozytorium kodu programu mongoDB, *https://github.com/mongodb/mongo*
-6. Van Rossum, G. & Drake, F.L., 2009. *Python 3 Reference Manual*, Scotts Valley, CA: CreateSpace.
+6.    Van Rossum, G. & Drake, F.L., 2009. *Python 3 Reference Manual*, Scotts Valley, CA: CreateSpace.
+7.    Dokumentacja MongoDB, *https://www.mongodb.com/docs/manual/core/sharded-cluster-components/#number-of-mongos-and-distribution*

@@ -7,13 +7,15 @@ output:
 
 # Streszczenie {-}
 
+`<placeholder>`
 
-Słowa kluczowe:
+Słowa kluczowe: Big Data, Apache Kafka, MongoDB, Twitter, Apache Spark, strumienoiwe przetwarzanie danych
 
 
 ----------------------------------------------------
 
 # Summary {-}
 
+`<placeholder>`
 
-Keywords:
+Keywords: Big Data, Apache Kafka, MongoDB, Twitter, Apache Spark, data streaming
